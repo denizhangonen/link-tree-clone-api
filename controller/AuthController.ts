@@ -3,25 +3,31 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs'; // For password hashing
 import UserModel, { IUser } from '../model/User';
 
-// Example login function
 export const login = async (req: Request, res: Response) => {
   try {
-    // Your authentication logic here
     const { email, password } = req.body;
-    
-    // Example authentication check
-    if (email === 'example@example.com' && password === 'password') {
-      // Authentication successful
-      return res.status(200).json({ message: 'Authentication successful' });
-    } else {
-      // Authentication failed
+
+    // Find user by email
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    // Compare hashed password
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Authentication successful
+    return res.status(200).json({ message: 'Authentication successful' });
   } catch (error) {
     console.error('Error during login:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 // Signup controller function
 export const signup = async (req: Request, res: Response) => {
